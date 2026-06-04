@@ -29,6 +29,7 @@ output application/json
 ---
 {
   "status": "ERROR",
+  "correlationId": vars.correlationId default correlationId,
   "error_type": error.errorType.namespace ++ ":" ++ error.errorType.identifier,
   "description": error.description,
   "timestamp": now()
