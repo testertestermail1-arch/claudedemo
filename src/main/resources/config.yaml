@@ -1,0 +1,18 @@
+# Safe defaults for Git — replace with secure properties / Runtime Manager in each env.
+# Copy to config-local.yaml for local dev (gitignored) or use ${secure::...} after enabling Secure Properties.
+
+db:
+  host: "localhost"
+  port: "3306"
+  user: "root"
+  password: "REPLACE_ME"
+  database: "company_db"
+
+sfdc:
+  consumerKey: "REPLACE_ME"
+  consumerSecret: "REPLACE_ME"
+  tokenUrl: "https://your-org.develop.my.salesforce.com/services/oauth2/token"
+
+http:
+  host: "0.0.0.0"
+  port: "8081"

@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:salesforce="http://www.mulesoft.org/schema/mule/salesforce" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns:db="http://www.mulesoft.org/schema/mule/db"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/salesforce http://www.mulesoft.org/schema/mule/salesforce/current/mule-salesforce.xsd">
+	<sub-flow name="system-mysql-select-subflow" doc:id="34237ddd-0d83-4a06-a9da-ed90df638ae5" >
+		<db:select doc:name="Select" doc:id="6fe49dc9-0522-4d8b-aa93-90e8579134ed" config-ref="Database_Config">
+			<db:sql ><![CDATA[SELECT external_lead_id, first_name, last_name, company, email FROM leads_table
+]]></db:sql>
+		</db:select>
+	</sub-flow>
+	<sub-flow name="system-sfdc-upsert-subflow" doc:id="1706d36e-4d6d-4f2f-80a6-fb0ea399f1ce" >
+		<salesforce:upsert objectType="Lead" doc:name="Upsert" doc:id="2a01d03d-36d2-44f7-9645-5179c1d58470" config-ref="Salesforce_Config" externalIdFieldName="Email"/>
+		<logger level="INFO" doc:name="Logger" doc:id="0f27da3a-1d94-4f04-b23e-02599d6bb82d" message='"System Layer: Salesforce Upsert execution finished."'/>
+	</sub-flow>
+</mule>

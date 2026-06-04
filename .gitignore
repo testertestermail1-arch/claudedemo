@@ -1,0 +1,20 @@
+# Mule / Maven build output (never commit)
+target/
+.mule/
+
+# IDE
+.idea/
+*.iml
+.classpath
+.project
+.settings/
+.vscode/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Local secrets (use placeholders in config.yaml committed to Git)
+config-local.yaml
+*.local.yaml
+.env

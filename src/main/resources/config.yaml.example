@@ -1,0 +1,16 @@
+# Example only — copy values to config-local.yaml (gitignored) or secure properties.
+db:
+  host: "localhost"
+  port: "3306"
+  user: "your_db_user"
+  password: "your_db_password"
+  database: "company_db"
+
+sfdc:
+  consumerKey: "your_salesforce_consumer_key"
+  consumerSecret: "your_salesforce_consumer_secret"
+  tokenUrl: "https://your-org.develop.my.salesforce.com/services/oauth2/token"
+
+http:
+  host: "0.0.0.0"
+  port: "8081"
