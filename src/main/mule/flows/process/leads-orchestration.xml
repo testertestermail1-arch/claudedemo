@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<flow name="leads-process-orchestration-flow" doc:id="f41dcaf4-9ff6-4cf6-bbf1-1966ca905d45" >
+		<logger level="INFO" doc:name="Log process start" message='#["[$(vars.correlationId default correlationId)] Process layer: lead sync orchestration"]'/>
+		<flow-ref doc:name="Load leads from MySQL" doc:id="4d60e2ce-f90b-42be-ad38-21540faf909e" name="system-mysql-select-subflow"/>
+		<ee:transform doc:name="Map to Salesforce Lead" doc:id="c4bf7b1e-e111-472e-be2a-2b54577bc34f">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/java
+---
+payload map (record) -> {
+	FirstName: record.first_name,
+	LastName: record.last_name,
+	Company: record.company,
+	Email: record.email,
+	Status: "Open - Not Contacted"
+}
+]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<flow-ref doc:name="Upsert to Salesforce" doc:id="f2c7fa5d-8866-4b66-9bf4-15da5f335059" name="system-sfdc-upsert-subflow" />
+	</flow>
+</mule>

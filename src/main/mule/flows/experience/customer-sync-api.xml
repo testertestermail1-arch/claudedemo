@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<flow name="customer-sync-api-flow" doc:id="06033d6a-0783-4af4-bdcd-e5359493c67c">
+		<http:listener doc:name="Customer sync API" doc:id="0fdffa63-daa2-4e97-bcdd-558b6ee53683" config-ref="HTTP_Listener_config" path="/sync-db-leads" allowedMethods="POST">
+			<http:response statusCode="#[vars.httpStatus default 200]">
+				<http:body><![CDATA[#[payload]]]></http:body>
+			</http:response>
+			<http:error-response statusCode="#[vars.httpStatus default 500]">
+				<http:body><![CDATA[#[payload]]]></http:body>
+			</http:error-response>
+		</http:listener>
+		<set-variable value="#[correlationId]" doc:name="correlationId" doc:id="a1-correlation-id" variableName="correlationId"/>
+		<logger level="INFO" doc:name="Log API entry" doc:id="ffe241de-c13b-4184-81ee-5398f243b9cc"
+			message='#["[$(vars.correlationId)] Customer sync API invoked from $(attributes.remoteAddress default "unknown")"]'/>
+		<ee:transform doc:name="Validate request headers" doc:id="val-headers-transform">
+			<ee:variables>
+				<ee:set-variable variableName="validationErrors"><![CDATA[%dw 2.0
+output application/java
+---
+([] as Array)
+  ++ (if (isBlank(attributes.headers."x-request-id" default "")) ["Missing required header: X-Request-Id"] else [])
+  ++ (if (isBlank(attributes.headers."x-client-id" default "")) ["Missing required header: X-Client-Id"] else [])
+]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+		<choice doc:name="Request valid?" doc:id="val-choice">
+			<when expression="#[isEmpty(vars.validationErrors)]">
+				<flow-ref doc:name="Orchestrate lead sync" doc:id="4e629070-9853-4bb3-97cc-c32a0406dc1e" name="leads-process-orchestration-flow"/>
+				<ee:transform doc:name="Success response" doc:id="0260c1aa-b237-47b3-b86b-6750ad7bad61">
+					<ee:message>
+						<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+  correlationId: vars.correlationId,
+  message: "Sync processing complete.",
+  salesforce_results: payload
+}
+]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+			</when>
+			<otherwise>
+				<set-variable value="400" doc:name="httpStatus 400" variableName="httpStatus"/>
+				<raise-error type="VALIDATION:INVALID_REQUEST" doc:name="Invalid request"
+					description="#['Request validation failed: ' ++ (vars.validationErrors joinBy ', ')]"/>
+			</otherwise>
+		</choice>
+		<error-handler>
+			<on-error-continue type="VALIDATION:INVALID_REQUEST" doc:name="Validation error response">
+				<ee:transform doc:name="400 body">
+					<ee:message>
+						<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+  status: "ERROR",
+  correlationId: vars.correlationId default correlationId,
+  error_type: "VALIDATION",
+  description: error.description,
+  timestamp: now()
+}
+]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+			</on-error-continue>
+		</error-handler>
+	</flow>
+</mule>
